@@ -1,13 +1,11 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const shopSchema = new mongoose.Schema(
   {
     company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
-      required: function () {
-        return this.role !== "super_admin";
-      },
+      required: true,
     },
 
     name: {
@@ -16,11 +14,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    email: {
+    ownerName: {
       type: String,
-      unique: true,
-      required: true,
-      lowercase: true,
       trim: true,
     },
 
@@ -29,25 +24,32 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    password: {
-      type: String,
-      required: true,
-    },
-
-    role: {
-      type: String,
-      enum: ["super_admin", "company_admin", "manager", "employee"],
-      default: "employee",
-    },
-
-    employeeCode: {
+    address: {
       type: String,
       trim: true,
     },
 
-    manager: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    area: {
+      type: String,
+      trim: true,
+    },
+
+    city: {
+      type: String,
+      trim: true,
+    },
+
+    shopType: {
+      type: String,
+      trim: true,
+    },
+
+    latitude: {
+      type: Number,
+    },
+
+    longitude: {
+      type: Number,
     },
 
     territory: {
@@ -55,12 +57,18 @@ const userSchema = new mongoose.Schema(
       ref: "Territory",
     },
 
-    isActive: {
-      type: Boolean,
-      default: true,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("Shop", shopSchema);
