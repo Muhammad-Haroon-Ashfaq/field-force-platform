@@ -2,9 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -23,14 +20,6 @@ import auditRoutes from "./routes/auditRoutes.js";
 dotenv.config();
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Uploads folder banana agar nahi hai
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 app.use(cors({
   origin: [
@@ -44,9 +33,6 @@ app.use(cors({
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// Static files — uploaded images serve karne ke liye
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
 app.use("/api/auth", authRoutes);

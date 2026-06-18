@@ -1,7 +1,7 @@
+import { put, del } from "@vercel/blob";
 import MediaFile from "../models/MediaFile.js";
 import Submission from "../models/Submission.js";
 import path from "path";
-import fs from "fs";
 
 // @desc    Upload media file
 // @route   POST /api/media/upload
@@ -14,7 +14,6 @@ export const uploadMedia = async (req, res) => {
 
     const { submissionId } = req.body;
 
-    // Verify submission belongs to this company
     if (submissionId) {
       const submission = await Submission.findOne({
         _id: submissionId,
@@ -26,18 +25,26 @@ export const uploadMedia = async (req, res) => {
       }
     }
 
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const filename = `${unique}${path.extname(req.file.originalname)}`;
+
+    // Vercel Blob pe upload
+    const blob = await put(filename, req.file.buffer, {
+      access: "public",
+      contentType: req.file.mimetype,
+    });
+
     const mediaFile = await MediaFile.create({
       company: req.companyId,
       submission: submissionId || null,
       uploadedBy: req.user._id,
-      filename: req.file.filename,
+      filename: filename,
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       sizeBytes: req.file.size,
-      path: req.file.path,
+      path: blob.url, // ab yahan Blob ka full URL store hoga
     });
 
-    // If submissionId given, link media to submission
     if (submissionId) {
       await Submission.findByIdAndUpdate(submissionId, {
         $addToSet: { mediaFiles: mediaFile._id },
@@ -50,7 +57,7 @@ export const uploadMedia = async (req, res) => {
       originalName: mediaFile.originalName,
       mimeType: mediaFile.mimeType,
       sizeBytes: mediaFile.sizeBytes,
-      url: `/uploads/${mediaFile.filename}`,
+      url: blob.url,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -83,7 +90,7 @@ export const getMediaBySubmission = async (req, res) => {
         originalName: f.originalName,
         mimeType: f.mimeType,
         sizeBytes: f.sizeBytes,
-        url: `/uploads/${f.filename}`,
+        url: f.path, // pehle se full Blob URL hai
         createdAt: f.createdAt,
       }))
     );
@@ -106,12 +113,9 @@ export const deleteMedia = async (req, res) => {
       return res.status(404).json({ message: "File not found" });
     }
 
-    // Delete physical file
-    if (fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-    }
+    // Vercel Blob se file delete
+    await del(file.path);
 
-    // Remove from submission
     if (file.submission) {
       await Submission.findByIdAndUpdate(file.submission, {
         $pull: { mediaFiles: file._id },
