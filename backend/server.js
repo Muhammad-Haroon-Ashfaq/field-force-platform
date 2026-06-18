@@ -32,8 +32,16 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://fieldops.bytecraft.pk',
+    'http://fieldops.bytecraft.pk',
+  ],
+  credentials: true,
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
