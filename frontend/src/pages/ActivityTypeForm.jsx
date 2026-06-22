@@ -251,32 +251,89 @@ const ActivityTypeForm = () => {
             <div className="flex items-center gap-2 mb-4">
               <Smartphone size={15} className="text-gray-500" />
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mobile Preview</span>
+              <span className="ml-auto text-xs text-teal-600 font-medium bg-teal-50 px-2 py-0.5 rounded-full">Live</span>
             </div>
-            <div className="border-2 border-gray-200 rounded-2xl p-5 bg-gray-50">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
-                  <Shield size={18} className="text-gray-500" />
+
+            {/* Phone frame */}
+            <div className="mx-auto w-48 bg-slate-900 rounded-3xl p-2 shadow-xl">
+              {/* Phone notch */}
+              <div className="bg-white rounded-2xl overflow-hidden">
+                {/* Status bar */}
+                <div className="bg-slate-800 flex items-center justify-between px-3 py-1">
+                  <span className="text-white text-xs font-medium">9:41</span>
+                  <div className="flex gap-1">
+                    <div className="w-3 h-1.5 bg-white rounded-sm opacity-80" />
+                    <div className="w-1 h-1.5 bg-white rounded-sm opacity-60" />
+                  </div>
                 </div>
-                <div className="text-sm font-semibold text-gray-800 text-center">
-                  {form.name || 'Activity Name'}
+
+                {/* App header */}
+                <div className="bg-teal-600 px-3 py-2.5">
+                  <div className="text-white text-xs font-bold truncate">
+                    {form.name || 'Activity Name'}
+                  </div>
+                  <div className="text-teal-200 text-xs truncate opacity-80">
+                    {form.description || 'Field Activity'}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+
+                {/* Content */}
+                <div className="bg-gray-50 px-3 py-2 space-y-2 min-h-[120px]">
+                  {/* Shop requirement */}
+                  {form.requiresShop && (
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
+                      <div className="w-3 h-3 rounded-full bg-teal-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-700 font-medium">Shop Required</span>
+                    </div>
+                  )}
+                  {/* Location requirement */}
                   {form.requiresLocation && (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">LOCATION REQ.</span>
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
+                      <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-700 font-medium">GPS Required</span>
+                    </div>
                   )}
-                  {form.requiresPhoto ? (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">PHOTO REQ.</span>
-                  ) : (
-                    <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-medium">PHOTO OPT.</span>
-                  )}
+                  {/* Photo */}
+                  <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${form.requiresPhoto ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                    <span className="text-xs text-gray-700 font-medium">
+                      Photo {form.requiresPhoto ? 'Required' : 'Optional'}
+                    </span>
+                  </div>
+                  {/* Comments */}
                   {form.requiresComments && (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">COMMENTS REQ.</span>
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
+                      <div className="w-3 h-3 rounded-full bg-violet-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-700 font-medium">Comments Required</span>
+                    </div>
                   )}
+                  {/* Offline badge */}
                   {form.allowedOffline && (
-                    <span className="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full font-medium">OFFLINE OK</span>
+                    <div className="flex items-center gap-1.5 bg-teal-50 rounded-lg px-2 py-1.5 border border-teal-200">
+                      <div className="w-3 h-3 rounded-full bg-teal-500 flex-shrink-0" />
+                      <span className="text-xs text-teal-700 font-medium">Offline OK</span>
+                    </div>
                   )}
+                </div>
+
+                {/* Submit button */}
+                <div className="px-3 py-2 bg-white border-t border-gray-100">
+                  <div className={`w-full py-2 rounded-xl text-center text-xs font-bold text-white ${
+                    form.isActive ? 'bg-teal-500' : 'bg-gray-400'
+                  }`}>
+                    {form.isActive ? 'Submit Activity' : 'Inactive'}
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Legend */}
+            <div className="mt-3 flex flex-wrap gap-2 justify-center">
+              {form.requiresLocation && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">LOCATION REQ.</span>}
+              {form.requiresPhoto
+                ? <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">PHOTO REQ.</span>
+                : <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">PHOTO OPT.</span>}
+              {form.allowedOffline && <span className="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">OFFLINE OK</span>}
             </div>
           </div>
 

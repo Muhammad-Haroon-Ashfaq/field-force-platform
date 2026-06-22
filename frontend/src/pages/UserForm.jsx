@@ -180,8 +180,33 @@ const UserForm = () => {
         <p className="text-sm text-gray-500 mt-0.5">Assign roles, territories, and credentials for operational staff.</p>
       </div>
 
+      
+
       {/* Form Card */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
+
+{/* Action Bar */}
+        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200 flex-wrap gap-3">
+          <button onClick={() => navigate('/users')}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+            <X size={15} /> Cancel
+          </button>
+          <div className="flex items-center gap-3">
+            {!isEdit && (
+              <button onClick={() => validateAndSave(true)} disabled={loading}
+                className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-white font-medium transition-colors disabled:opacity-40 flex items-center gap-2">
+                {saveAndAddMut.isPending && <Loader2 size={14} className="animate-spin" />}
+                Save & Add Another
+              </button>
+            )}
+            <button onClick={() => validateAndSave(false)} disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40">
+              {saveMut.isPending && <Loader2 size={14} className="animate-spin" />}
+              <Save size={15} />
+              {isEdit ? 'Save Changes' : 'Save User'}
+            </button>
+          </div>
+        </div>
 
         {/* Identity */}
         <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] border-b border-gray-100">
@@ -289,28 +314,6 @@ const UserForm = () => {
           </div>
         </div>
 
-        {/* Action Bar */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200 flex-wrap gap-3">
-          <button onClick={() => navigate('/users')}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
-            <X size={15} /> Cancel
-          </button>
-          <div className="flex items-center gap-3">
-            {!isEdit && (
-              <button onClick={() => validateAndSave(true)} disabled={loading}
-                className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-white font-medium transition-colors disabled:opacity-40 flex items-center gap-2">
-                {saveAndAddMut.isPending && <Loader2 size={14} className="animate-spin" />}
-                Save & Add Another
-              </button>
-            )}
-            <button onClick={() => validateAndSave(false)} disabled={loading}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40">
-              {saveMut.isPending && <Loader2 size={14} className="animate-spin" />}
-              <Save size={15} />
-              {isEdit ? 'Save Changes' : 'Save User'}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Bottom Info Cards */}

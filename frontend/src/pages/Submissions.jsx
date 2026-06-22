@@ -207,7 +207,7 @@ const Submissions = () => {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1fr_1fr_50px] gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="grid grid-cols-[1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.3fr_1.3fr] gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
           <div>Submitted At</div>
           <div>Employee</div>
           <div>Activity</div>
@@ -241,7 +241,7 @@ const Submissions = () => {
           return (
             <div key={s._id}
               onClick={() => navigate(`/submissions/${s._id}`)}
-              className={`grid grid-cols-[1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1fr_1fr_50px] gap-3 px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center cursor-pointer ${
+              className={`grid grid-cols-[1.5fr_1.5fr_1.5fr_1.5fr_1.2fr_1.3fr_1.3fr] gap-3 px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center cursor-pointer ${
                 i === submissions.length - 1 ? 'border-b-0' : ''
               }`}>
               {/* Submitted At */}
@@ -293,11 +293,11 @@ const Submissions = () => {
                 </span>
               </div>
               {/* Actions */}
-              <div onClick={e => e.stopPropagation()} className="flex justify-center">
+              {/* <div onClick={e => e.stopPropagation()} className="flex justify-center">
                 <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
                   <MoreVertical size={15} />
                 </button>
-              </div>
+              </div> */}
             </div>
           );
         })}

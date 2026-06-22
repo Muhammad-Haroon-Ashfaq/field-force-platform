@@ -1,4 +1,5 @@
 import express from "express";
+import { forgotPassword, resetPassword } from "../controllers/authController.js";
 import {
   registerUser,
   loginUser,
@@ -13,5 +14,6 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/profile", protect, getProfile);
 router.put("/change-password", protect, changePassword);
-
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 export default router;
