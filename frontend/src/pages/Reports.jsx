@@ -335,8 +335,8 @@ const Reports = () => {
                     dataKey="value" strokeWidth={2}>
                     {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                   </Pie>
-                  <text x={80} y={70} textAnchor="middle" className="text-2xl font-bold" fill="#1e293b" style={{ fontSize: 22, fontWeight: 700 }}>{syncRate}%</text>
-                  <text x={80} y={90} textAnchor="middle" fill="#94a3b8" style={{ fontSize: 10 }}>SYNCED</text>
+                  <text x={80} y={80} textAnchor="middle" className="text-2xl font-bold" fill="#1e293b" style={{ fontSize: 22, fontWeight: 700 }}>{syncRate}%</text>
+                  <text x={80} y={95} textAnchor="middle" fill="#94a3b8" style={{ fontSize: 10 }}>SYNCED</text>
                 </PieChart>
               </div>
               <div className="space-y-2 mt-2">

@@ -47,6 +47,23 @@ const ActivityTypeForm = () => {
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  // Dynamic Time State & Effect
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      hours = hours % 12 || 12; 
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Fetch existing activity if edit
   const { isLoading: fetchLoading, data: activityData } = useQuery({
     queryKey: ['activity-type', id],
@@ -256,14 +273,15 @@ const ActivityTypeForm = () => {
 
             {/* Phone frame */}
             <div className="mx-auto w-48 bg-slate-900 rounded-3xl p-2 shadow-xl">
-              {/* Phone notch */}
               <div className="bg-white rounded-2xl overflow-hidden">
-                {/* Status bar */}
+                
+                {/* Status bar (Updated with real time) */}
                 <div className="bg-slate-800 flex items-center justify-between px-3 py-1">
-                  <span className="text-white text-xs font-medium">9:41</span>
+                  <span className="text-white text-xs font-medium">
+                    {currentTime || '12:00'}
+                  </span>
                   <div className="flex gap-1">
                     <div className="w-3 h-1.5 bg-white rounded-sm opacity-80" />
-                    <div className="w-1 h-1.5 bg-white rounded-sm opacity-60" />
                   </div>
                 </div>
 
@@ -279,35 +297,30 @@ const ActivityTypeForm = () => {
 
                 {/* Content */}
                 <div className="bg-gray-50 px-3 py-2 space-y-2 min-h-[120px]">
-                  {/* Shop requirement */}
                   {form.requiresShop && (
                     <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
                       <div className="w-3 h-3 rounded-full bg-teal-500 flex-shrink-0" />
                       <span className="text-xs text-gray-700 font-medium">Shop Required</span>
                     </div>
                   )}
-                  {/* Location requirement */}
                   {form.requiresLocation && (
                     <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
                       <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
                       <span className="text-xs text-gray-700 font-medium">GPS Required</span>
                     </div>
                   )}
-                  {/* Photo */}
                   <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
                     <div className={`w-3 h-3 rounded-full flex-shrink-0 ${form.requiresPhoto ? 'bg-orange-500' : 'bg-gray-300'}`} />
                     <span className="text-xs text-gray-700 font-medium">
                       Photo {form.requiresPhoto ? 'Required' : 'Optional'}
                     </span>
                   </div>
-                  {/* Comments */}
                   {form.requiresComments && (
                     <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-200">
                       <div className="w-3 h-3 rounded-full bg-violet-500 flex-shrink-0" />
                       <span className="text-xs text-gray-700 font-medium">Comments Required</span>
                     </div>
                   )}
-                  {/* Offline badge */}
                   {form.allowedOffline && (
                     <div className="flex items-center gap-1.5 bg-teal-50 rounded-lg px-2 py-1.5 border border-teal-200">
                       <div className="w-3 h-3 rounded-full bg-teal-500 flex-shrink-0" />

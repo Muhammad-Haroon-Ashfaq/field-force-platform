@@ -385,7 +385,7 @@ const Submissions = () => {
           <span className="w-2 h-2 rounded-full bg-teal-500 inline-block" />
           Last sync: just now
         </div>
-        <span>© 2024 FieldOps Operational Intelligence</span>
+        <span>© 2026 FieldOps Operational Intelligence</span>
       </div>
     </div>
   );

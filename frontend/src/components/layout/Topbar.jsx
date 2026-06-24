@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, HelpCircle, Search, Loader2, Store, Users, X } from 'lucide-react';
+import { Menu, Bell, HelpCircle, Search, Loader2, Store, Users, X, Check, BookOpen, MessageSquare, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 
 const getInitials = (name = '') =>
   name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
+// ─── GLOBAL SEARCH COMPONENT ───────────────────────────────────
 const GlobalSearch = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
@@ -100,7 +101,6 @@ const GlobalSearch = () => {
       {/* Dropdown */}
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-
           {/* No results */}
           {!hasResults && !loading && (
             <div className="py-8 text-center text-sm text-gray-400">
@@ -176,8 +176,41 @@ const GlobalSearch = () => {
   );
 };
 
+// ─── MAIN TOPBAR COMPONENT ────────────────────────────────────
 const Topbar = ({ setMobileOpen }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'New Submission', desc: 'Asif Khan submitted a new form in Zone A.', time: '5m ago', unread: true, type: 'info' },
+    { id: 2, title: 'Sync Warning', desc: 'Failed to sync 3 records for Shop #104.', time: '2h ago', unread: true, type: 'warning' },
+    { id: 3, title: 'System Update', desc: 'FieldOps v2.4 dashboard successfully deployed.', time: '1d ago', unread: false, type: 'success' },
+  ]);
+
+  const notifRef = useRef(null);
+  const helpRef = useRef(null);
+
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+      if (helpRef.current && !helpRef.current.contains(e.target)) setHelpOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  };
+
+  const toggleRead = (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+  };
 
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-4 sticky top-0 z-20">
@@ -193,16 +226,97 @@ const Topbar = ({ setMobileOpen }) => {
       <GlobalSearch />
 
       <div className="flex items-center gap-2 ml-auto">
-        {/* Notifications */}
-        <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        
+        {/* NOTIFICATIONS */}
+        <div ref={notifRef} className="relative">
+          <button 
+            onClick={() => { setNotifOpen(!notifOpen); setHelpOpen(false); }}
+            className={`relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors ${notifOpen ? 'bg-gray-100 text-gray-700' : ''}`}
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            )}
+          </button>
 
-        {/* Help */}
-        <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-          <HelpCircle size={18} />
-        </button>
+          {notifOpen && (
+            <div className="absolute right-0 mt-1.5 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="px-4 py-3 flex justify-between items-center bg-gray-50 border-b border-gray-100">
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Notifications</span>
+                {unreadCount > 0 && (
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+                  >
+                    <Check size={12} /> Mark all read
+                  </button>
+                )}
+              </div>
+              <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+                {notifications.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-gray-400">No notifications</div>
+                ) : (
+                  notifications.map(n => (
+                    <div 
+                      key={n.id} 
+                      onClick={() => toggleRead(n.id)}
+                      className={`p-3 text-left transition-colors cursor-pointer flex gap-3 ${n.unread ? 'bg-teal-50/40 hover:bg-teal-50/70' : 'hover:bg-gray-50'}`}
+                    >
+                      <div className="mt-0.5">
+                        {n.type === 'warning' ? <ShieldAlert size={15} className="text-amber-500" /> : <Store size={15} className="text-teal-600" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline gap-2">
+                          <p className={`text-xs font-semibold truncate ${n.unread ? 'text-gray-900' : 'text-gray-600'}`}>{n.title}</p>
+                          <span className="text-[10px] text-gray-400 flex-shrink-0">{n.time}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 line-clamp-2 mt-0.5">{n.desc}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* HELP CENTER */}
+        <div ref={helpRef} className="relative">
+          <button 
+            onClick={() => { setHelpOpen(!helpOpen); setNotifOpen(false); }}
+            className={`p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors ${helpOpen ? 'bg-gray-100 text-gray-700' : ''}`}
+          >
+            <HelpCircle size={18} />
+          </button>
+
+          {helpOpen && (
+            <div className="absolute right-0 mt-1.5 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1">
+              <div className="px-3 py-1.5 border-b border-gray-100 bg-gray-50/50">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Help & Support</span>
+              </div>
+              
+              <button 
+                onClick={() => { setHelpOpen(false); navigate('/docs'); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 text-left transition-colors"
+              >
+                <BookOpen size={14} className="text-gray-400" />
+                <span>Documentation</span>
+              </button>
+
+              {/* <button 
+                onClick={() => { setHelpOpen(false); window.open('mailto:support@fieldops.com'); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 text-left transition-colors"
+              >
+                <MessageSquare size={14} className="text-gray-400" />
+                <span>Contact Support</span>
+              </button> */}
+
+              <div className="border-t border-gray-100 mt-1 pt-1 px-3 py-1 text-[10px] text-gray-400">
+                FieldOps v2.4.0
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User info */}
         <div className="flex items-center gap-2 pl-2 border-l border-gray-200">

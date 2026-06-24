@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Docs from './context/Docs';
 import Layout from './components/layout/Layout'; // <-- add karo
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
@@ -44,6 +45,7 @@ const AppRoutes = () => {
       
       {/* Layout wrap */}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="/docs" element={<Docs />} />
         <Route path="/" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/users/new" element={<UserForm />} />
