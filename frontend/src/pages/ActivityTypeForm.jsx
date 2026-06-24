@@ -8,7 +8,7 @@ import {
 import API from '../api/axios';
 import toast from 'react-hot-toast';
 
-const fetchForms = () => API.get('/form-templates').then(r => r.data);
+const fetchForms = () => API.get('/forms').then(r => r.data);
 
 // ─── Toggle Row ───────────────────────────────────────────────
 const ToggleRow = ({ label, sublabel, field, form, set, icon }) => (

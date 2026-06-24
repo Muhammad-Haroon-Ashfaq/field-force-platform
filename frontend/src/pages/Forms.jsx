@@ -10,7 +10,7 @@ import API from '../api/axios';
 import toast from 'react-hot-toast';
 
 // ─── API ──────────────────────────────────────────────────────
-const fetchForms = () => API.get('/form-templates').then(r => r.data);
+const fetchForms = () => API.get('/forms').then(r => r.data);
 const fetchActivities = () => API.get('/activity-types').then(r => r.data);
 
 const ITEMS_PER_PAGE = 10;
@@ -88,7 +88,7 @@ const Forms = () => {
   const syncRate = total ? Math.round((linkedCount / total) * 100) : 0;
 
   const deleteMut = useMutation({
-    mutationFn: (id) => API.delete(`/form-templates/${id}`).then(r => r.data),
+    mutationFn: (id) => API.delete(`/forms/${id}`).then(r => r.data),
     onSuccess: () => {
       toast.success('Form deleted');
       qc.invalidateQueries(['form-templates']);

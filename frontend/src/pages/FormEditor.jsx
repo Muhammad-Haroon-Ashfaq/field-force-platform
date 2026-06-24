@@ -285,7 +285,7 @@ const FormEditor = () => {
   // Fetch form if edit
   const { isLoading: fetchLoading, data: formData } = useQuery({
     queryKey: ['form-template', id],
-    queryFn: () => API.get(`/form-templates/${id}`).then(r => r.data),
+    queryFn: () => API.get(`/forms/${id}`).then(r => r.data),
     enabled: isEdit,
   });
 
@@ -322,8 +322,8 @@ const FormEditor = () => {
 
   const saveMut = useMutation({
     mutationFn: (payload) => isEdit
-      ? API.put(`/form-templates/${id}`, payload).then(r => r.data)
-      : API.post('/form-templates', payload).then(r => r.data),
+      ? API.put(`/forms/${id}`, payload).then(r => r.data)
+      : API.post('/forms', payload).then(r => r.data),
     onSuccess: () => {
       toast.success(isEdit ? 'Template updated' : 'Template created');
       qc.invalidateQueries(['form-templates']);

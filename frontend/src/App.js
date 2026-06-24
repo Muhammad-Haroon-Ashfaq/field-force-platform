@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout'; // <-- add karo
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import UserForm from './pages/UserForm';
@@ -39,6 +40,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
       {/* Layout wrap */}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

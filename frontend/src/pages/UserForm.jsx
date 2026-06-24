@@ -148,11 +148,48 @@ const UserForm = () => {
     else saveMut.mutate(payload);
   };
 
+  // Input sanitizer for phone numbers (allows only digits and +)
+  const handlePhoneChange = (val) => {
+    const sanitized = val.replace(/[^0-9+]/g, '');
+    set('phone', sanitized);
+  };
+
   const validateAndSave = (addAnother = false) => {
     if (!form.name.trim()) return toast.error('Full name is required');
+    
+    // Email regex validation
     if (!form.email.trim()) return toast.error('Email is required');
-    if (!isEdit && !form.password) return toast.error('Password is required');
-    if (!isEdit && form.password.length < 8) return toast.error('Password must be at least 8 characters');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) return toast.error('Please enter a valid email address');
+
+    // Phone registration validation (Pakistan numbers format check)
+    if (!form.phone.trim()) return toast.error('Phone number is required');
+    const cleanPhone = form.phone.trim();
+    if (cleanPhone.startsWith('+92')) {
+      if (cleanPhone.length !== 13) return toast.error('International format phone number must be exactly 13 characters (e.g., +923001234567)');
+    } else if (cleanPhone.startsWith('03') || cleanPhone.startsWith('3')) {
+      if (cleanPhone.replace(/^0/, '3').length !== 10) return toast.error('Local phone number must be exactly 11 digits (e.g., 03001234567)');
+    } else {
+      return toast.error('Invalid phone number format');
+    }
+
+    // Role validation
+    if (!form.role) return toast.error('Please select a user role');
+
+    // Password rules check (Only on create mode)
+    if (!isEdit) {
+      if (!form.password) return toast.error('Password is required');
+      if (form.password.length < 8) return toast.error('Password must be at least 8 characters long');
+      
+      const hasUppercase = /[A-Z]/.test(form.password);
+      const hasLowercase = /[a-z]/.test(form.password);
+      const hasNumber = /[0-9]/.test(form.password);
+      
+      if (!hasUppercase || !hasLowercase || !hasNumber) {
+        return toast.error('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      }
+    }
+
     if (isEdit) { setShowConfirm(true); return; }
     doSave(addAnother);
   };
@@ -180,12 +217,10 @@ const UserForm = () => {
         <p className="text-sm text-gray-500 mt-0.5">Assign roles, territories, and credentials for operational staff.</p>
       </div>
 
-      
-
       {/* Form Card */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
 
-{/* Action Bar */}
+        {/* Action Bar */}
         <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200 flex-wrap gap-3">
           <button onClick={() => navigate('/users')}
             className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-gray-800 transition-colors">
@@ -233,8 +268,8 @@ const UserForm = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
-                <input value={form.phone} onChange={e => set('phone', e.target.value)}
-                  placeholder="+92 300 0000000"
+                <input value={form.phone} onChange={e => handlePhoneChange(e.target.value)}
+                  placeholder="e.g. 03001234567 or +923001234567"
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all" />
               </div>
             </div>
@@ -268,14 +303,14 @@ const UserForm = () => {
           </div>
         </div>
 
-        {/* Security */}
+        {/* Security / Account */}
         <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]">
           <div className="px-6 py-6 bg-gray-50/50 border-r border-gray-100">
             <div className="flex items-center gap-2 mb-1">
               <Lock size={15} className="text-teal-600" />
               <h2 className="text-sm font-semibold text-gray-800">Account</h2>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed">Set status active or inactive.</p>
+            <p className="text-xs text-gray-400 leading-relaxed">Set status active or inactive and credentials.</p>
           </div>
           <div className="px-6 py-6 space-y-4">
             <div className="flex items-start gap-6 flex-wrap">
@@ -287,7 +322,7 @@ const UserForm = () => {
                     type="password"
                     value={form.password}
                     onChange={e => set('password', e.target.value)}
-                    placeholder="Min. 8 characters"
+                    placeholder="Min. 8 chars (A-Z, a-z, 0-9)"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
                   />
                 </div>
@@ -307,7 +342,7 @@ const UserForm = () => {
               <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                 <Info size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-700 leading-relaxed">
-                  New users will be prompted to reset their password upon first login as per company security policy.
+                  Password requirement: Minimum 8 characters with at least one uppercase letter, one lowercase letter, and a number.
                 </p>
               </div>
             )}

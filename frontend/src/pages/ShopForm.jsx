@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -26,6 +26,20 @@ const MapClickHandler = ({ onLocationSelect }) => {
       onLocationSelect(e.latlng.lat, e.latlng.lng);
     },
   });
+  return null;
+};
+
+// ─── Map Recenter & Zoom Controller ───────────────────────────
+const ChangeMapView = ({ center, zoom }) => {
+  const map = useMapEvents({});
+  useEffect(() => {
+    if (center && center[0] && center[1]) {
+      map.flyTo(center, zoom, {
+        animate: true,
+        duration: 1.5, // smooth fly animation duration in seconds
+      });
+    }
+  }, [center, zoom, map]);
   return null;
 };
 
@@ -151,6 +165,7 @@ const ShopForm = () => {
     const roundedLat = Math.round(lat * 10000) / 10000;
     const roundedLng = Math.round(lng * 10000) / 10000;
     setMarkerPos([lat, lng]);
+    setMapCenter([lat, lng]); // Map auto center update on click
     set('latitude', roundedLat);
     set('longitude', roundedLng);
   };
@@ -413,7 +428,7 @@ const ShopForm = () => {
         <div className="relative h-96">
           <MapContainer
             center={mapCenter}
-            zoom={13}
+            zoom={16} // Default zoom increased from 13 to 16 for better street view
             style={{ height: '100%', width: '100%' }}
             whenReady={() => setMapReady(true)}
           >
@@ -421,6 +436,10 @@ const ShopForm = () => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            {/* Dynamic Map Recenter & Fly Controller */}
+            <ChangeMapView center={mapCenter} zoom={16} />
+
             <MapClickHandler onLocationSelect={handleLocationSelect} />
             {markerPos && <Marker position={markerPos} />}
           </MapContainer>

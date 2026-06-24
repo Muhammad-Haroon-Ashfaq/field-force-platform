@@ -1,56 +1,108 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Radio, ArrowRight, Lock, Mail, X, Phone } from 'lucide-react';
+import { Eye, EyeOff, Radio, ArrowRight, Lock, Mail, X, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
 
 // ─── Forgot Password Modal ────────────────────────────────────
-const ForgotPasswordModal = ({ onClose }) => (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-900">Forgot Password?</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <X size={18} />
-        </button>
-      </div>
+const ForgotPasswordModal = ({ onClose }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-        <p className="text-sm text-amber-800 font-medium mb-1">Contact Your Administrator</p>
-        <p className="text-xs text-amber-700 leading-relaxed">
-          Password reset is managed by your company administrator. Please contact them to reset your password.
-        </p>
-      </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    setLoading(true);
+    try {
+      await API.post('/auth/forgot-password', { email });
+      setSent(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      <div className="space-y-3">
-        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-            <Mail size={14} className="text-teal-600" />
-          </div>
-          <div>
-            <div className="text-xs font-semibold text-gray-700">Email your admin</div>
-            <div className="text-xs text-gray-400 mt-0.5">Ask them to reset your password from the Users management panel.</div>
-          </div>
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold text-gray-900">Forgot Password?</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
         </div>
-        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-          <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-            <Phone size={14} className="text-teal-600" />
-          </div>
-          <div>
-            <div className="text-xs font-semibold text-gray-700">Call support</div>
-            <div className="text-xs text-gray-400 mt-0.5">Your administrator can reset your password directly from FieldOps dashboard.</div>
-          </div>
-        </div>
-      </div>
 
-      <button onClick={onClose}
-        className="w-full mt-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors">
-        Got it
-      </button>
+        {sent ? (
+          /* ── Success State ── */
+          <div className="text-center py-4">
+            <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={24} className="text-teal-600" />
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Check your email</h4>
+            <p className="text-sm text-gray-500 mb-6">
+              If <span className="font-medium text-gray-700">{email}</span> is registered,
+              a password reset link has been sent. Check your inbox.
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors">
+              Got it
+            </button>
+          </div>
+        ) : (
+          /* ── Form State ── */
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all bg-gray-50"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'Send Reset Link'
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 text-gray-500 hover:text-gray-700 text-sm transition-colors">
+              Cancel
+            </button>
+          </form>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Main Login Page ──────────────────────────────────────────
 const Login = () => {
