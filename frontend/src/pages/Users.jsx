@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, CheckSquare, Square,
   Edit2, Trash2, KeyRound,
   Loader2, Users as UsersIcon, Zap, BriefcaseIcon, Mail,
-  Eye, EyeOff
+  Eye, EyeOff, Phone, MapPin, Shield
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -36,7 +36,7 @@ const STATUS_STYLES = {
   inactive: 'bg-gray-100 text-gray-500 border border-gray-200',
 };
 
-const ROLES = ['company_admin', 'manager', 'employee', 'auditor'];
+const ROLES = ['company_admin', 'manager', 'employee'];
 
 const formatRole = (r = '') => r.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
 const timeAgo = (date) => {
@@ -92,7 +92,7 @@ const ActionMenu = ({ user, onEdit, onDelete, onResetPw }) => {
 
 // ─── Reset Password Modal ─────────────────────────────────────
 const ResetPasswordModal = ({ user, onClose, onConfirm, loading }) => {
-  const [step, setStep] = useState('confirm'); // confirm | enter
+  const [step, setStep] = useState('confirm');
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
 
@@ -179,180 +179,6 @@ const DeleteModal = ({ user, onClose, onConfirm, loading }) => (
   </div>
 );
 
-// ─── Territory Selector Component ────────────────────────────
-const TerritorySelector = ({ value, onChange }) => {
-  const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  const { data: territories, isLoading } = useQuery({
-    queryKey: ['territories-list'],
-    queryFn: () => API.get('/territories').then(r => r.data),
-  });
-
-  useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setSearch(''); } };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
-
-  const filtered = (territories || []).filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const selected = (territories || []).find(t => t._id === value);
-
-  return (
-    <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(v => !v)}
-        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-left focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white flex items-center justify-between">
-        <span className={selected ? 'text-gray-800' : 'text-gray-400'}>
-          {isLoading ? 'Loading...' : selected ? `${selected.name} (${selected.type})` : 'Select territory...'}
-        </span>
-        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-[999] overflow-hidden">
-          {/* Search */}
-          <div className="p-2 border-b border-gray-100">
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search territory..." autoFocus
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
-            </div>
-          </div>
-          <div className="max-h-52 overflow-y-auto">
-            {/* Clear option */}
-            <button type="button" onClick={() => { onChange(''); setOpen(false); setSearch(''); }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-gray-50 italic border-b border-gray-100">
-              — No Territory —
-            </button>
-            {isLoading && (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 size={16} className="animate-spin text-gray-300" />
-              </div>
-            )}
-            {!isLoading && filtered.length === 0 && (
-              <div className="px-3 py-6 text-sm text-gray-400 text-center">
-                {territories?.length === 0
-                  ? 'No territories added yet. Add from Territories page first.'
-                  : 'No match found'}
-              </div>
-            )}
-            {filtered.map(t => (
-              <button key={t._id} type="button"
-                onClick={() => { onChange(t._id); setOpen(false); setSearch(''); }}
-                className={`w-full text-left px-3 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors flex items-center justify-between ${
-                  value === t._id ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-700'
-                }`}>
-                <span>{t.name}</span>
-                <span className="text-xs text-gray-400 capitalize bg-gray-100 px-2 py-0.5 rounded-full">{t.type}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── Add/Edit User Modal ──────────────────────────────────────
-const UserModal = ({ user, onClose, onSave, loading }) => {
-  const [form, setForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    role: user?.role || 'employee',
-    password: '',
-    isActive: user?.isActive ?? true,
-    territory: user?.territory?._id || user?.territory || '',
-  });
-  const isEdit = !!user;
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {isEdit ? 'Edit User' : 'Add New User'}
-        </h3>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-gray-500 block mb-1">Full Name</label>
-            <input value={form.name} onChange={e => set('name', e.target.value)}
-              placeholder="e.g. Alex Johnson"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Email</label>
-              <input value={form.email} onChange={e => set('email', e.target.value)}
-                placeholder="user@company.com" type="email"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Phone</label>
-              <input value={form.phone} onChange={e => set('phone', e.target.value)}
-                placeholder="+92 300 0000000"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Role</label>
-              <select value={form.role} onChange={e => set('role', e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white">
-                {ROLES.map(r => <option key={r} value={r}>{formatRole(r)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Status</label>
-              <select value={form.isActive ? 'active' : 'inactive'} onChange={e => set('isActive', e.target.value === 'active')}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Territory */}
-          <div>
-            <label className="text-xs font-medium text-gray-500 block mb-1">Territory</label>
-            <TerritorySelector
-              value={form.territory}
-              onChange={v => set('territory', v)}
-            />
-          </div>
-
-          {!isEdit && (
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Password</label>
-              <input value={form.password} onChange={e => set('password', e.target.value)}
-                type="password" placeholder="Min. 8 characters"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400" />
-            </div>
-          )}
-        </div>
-        <div className="flex gap-2 mt-5">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 font-medium">
-            Cancel
-          </button>
-          <button onClick={() => onSave(form)} disabled={loading || !form.name || !form.email || (!isEdit && !form.password)}
-            className="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-40 flex items-center justify-center gap-2">
-            {loading && <Loader2 size={14} className="animate-spin" />}
-            {isEdit ? 'Save Changes' : 'Add User'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ─── Main Users Page ──────────────────────────────────────────
 const Users = () => {
   const navigate = useNavigate();
@@ -364,12 +190,9 @@ const Users = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState([]);
-
-  // const [modalUser, setModalUser] = useState(null);   // null=closed, false=new, obj=edit
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [resetTarget, setResetTarget] = useState(null);
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 350);
     return () => clearTimeout(t);
@@ -386,18 +209,15 @@ const Users = () => {
     queryFn: () => fetchUsers(queryParams),
   });
 
-  // Client-side pagination (backend returns array)
   const allUsers = usersRaw || [];
   const totalPages = Math.max(1, Math.ceil(allUsers.length / ITEMS_PER_PAGE));
   const pageUsers = allUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Stat cards
   const totalUsers = allUsers.length;
   const activeNow = allUsers.filter(u => u.isActive).length;
   const fieldAgents = allUsers.filter(u => u.role === 'employee').length;
   const pendingInvite = allUsers.filter(u => !u.isActive).length;
 
-  // Mutations
   const deleteMut = useMutation({
     mutationFn: (id) => deleteUser(id),
     onSuccess: () => { toast.success('User deleted'); qc.invalidateQueries(['users']); setDeleteTarget(null); },
@@ -416,19 +236,6 @@ const Users = () => {
     onError: (e) => toast.error(e.response?.data?.message || 'Reset failed'),
   });
 
-  // const saveMut = useMutation({
-  //   mutationFn: (payload) => modalUser?._id
-  //     ? API.put(`/users/${modalUser._id}`, payload).then(r => r.data)
-  //     : API.post('/users', payload).then(r => r.data),
-  //   onSuccess: () => {
-  //     toast.success(modalUser?._id ? 'User updated' : 'User created');
-  //     qc.invalidateQueries(['users']);
-  //     setModalUser(null);
-  //   },
-  //   onError: (e) => toast.error(e.response?.data?.message || 'Save failed'),
-  // });
-
-  // Select all on page
   const allSelected = pageUsers.length > 0 && pageUsers.every(u => selected.includes(u._id));
   const toggleAll = () => {
     if (allSelected) setSelected(s => s.filter(id => !pageUsers.find(u => u._id === id)));
@@ -437,7 +244,6 @@ const Users = () => {
   const toggleOne = (id) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
-  // Export CSV
   const exportCSV = () => {
     const rows = [['Name', 'Email', 'Role', 'Phone', 'Status', 'Territory']];
     allUsers.forEach(u => rows.push([u.name, u.email, u.role, u.phone || '', u.isActive ? 'Active' : 'Inactive', u.territory?.name || '']));
@@ -447,15 +253,14 @@ const Users = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 min-h-full">
 
       {/* Page Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Users</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage organization members, roles, and field permissions.</p>
         </div>
-        {/* <button onClick={() => setModalUser(false)} */}
         <button onClick={() => navigate('/users/new')}
           className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
           <UserPlus size={16} /> Add User
@@ -463,75 +268,67 @@ const Users = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: 'Total Users', value: totalUsers, icon: <UsersIcon size={18} className="text-teal-500" />, sub: null },
           { label: 'Active Now', value: activeNow, icon: <Zap size={18} className="text-teal-500" />, sub: `${totalUsers ? Math.round(activeNow/totalUsers*100) : 0}% active rate` },
           { label: 'Field Agents', value: fieldAgents, icon: <BriefcaseIcon size={18} className="text-teal-500" />, sub: 'Employees' },
           { label: 'Inactive', value: pendingInvite, icon: <Mail size={18} className="text-teal-500" />, sub: 'Deactivated accounts' },
         ].map(c => (
-          <div key={c.label} className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-sm text-gray-500 font-medium">{c.label}</span>
+          <div key={c.label} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm text-gray-500 font-medium">{c.label}</span>
               {c.icon}
             </div>
             {isLoading
-              ? <div className="h-8 w-20 bg-gray-100 rounded animate-pulse" />
-              : <div className="text-3xl font-bold text-gray-900">{c.value.toLocaleString()}</div>}
-            {c.sub && <div className="text-xs text-gray-400 mt-1">{c.sub}</div>}
+              ? <div className="h-7 w-16 bg-gray-100 rounded animate-pulse" />
+              : <div className="text-2xl sm:text-3xl font-bold text-gray-900">{c.value.toLocaleString()}</div>}
+            {c.sub && <div className="text-xs text-gray-400 mt-1 hidden sm:block">{c.sub}</div>}
           </div>
         ))}
       </div>
 
       {/* Filters Row */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search by name, email or ID..."
               className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all" />
           </div>
-          {/* Role Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 font-medium">Role:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Role Filter */}
             <select value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white text-gray-700">
+              className="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white text-gray-700">
               <option value="">All Roles</option>
               {ROLES.map(r => <option key={r} value={r}>{formatRole(r)}</option>)}
             </select>
-          </div>
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 font-medium">Status:</span>
+            {/* Status Filter */}
             <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white text-gray-700">
+              className="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white text-gray-700">
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            {selected.length > 0 && (
-              <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                {selected.length} selected
-              </span>
-            )}
-            <button onClick={exportCSV}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Export CSV">
-              <Download size={16} />
-            </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Filters">
-              <Filter size={16} />
-            </button>
+            <div className="flex items-center gap-1 ml-auto sm:ml-0">
+              {selected.length > 0 && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {selected.length} selected
+                </span>
+              )}
+              <button onClick={exportCSV}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Export CSV">
+                <Download size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {/* Table Header */}
+      {/* ── DESKTOP TABLE (md+) ── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-[40px_2fr_1fr_2fr_1.5fr_1fr_1fr_60px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
           <div className="flex items-center">
             <button onClick={toggleAll}>
@@ -547,14 +344,12 @@ const Users = () => {
           <div>Actions</div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <Loader2 size={24} className="text-gray-300 animate-spin" />
           </div>
         )}
 
-        {/* Empty */}
         {!isLoading && pageUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <UsersIcon size={36} className="mb-3 opacity-30" />
@@ -563,17 +358,14 @@ const Users = () => {
           </div>
         )}
 
-        {/* Rows */}
         {!isLoading && pageUsers.map((u, i) => (
           <div key={u._id}
             className={`grid grid-cols-[40px_2fr_1fr_2fr_1.5fr_1fr_1fr_60px] gap-3 px-4 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center ${i === pageUsers.length - 1 ? 'border-b-0' : ''}`}>
-            {/* Checkbox */}
             <button onClick={() => toggleOne(u._id)}>
               {selected.includes(u._id)
                 ? <CheckSquare size={16} className="text-teal-500" />
                 : <Square size={16} className="text-gray-300" />}
             </button>
-            {/* Name + ID */}
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-9 h-9 rounded-full ${getAvatarColor(u.name)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
                 {getInitials(u.name)}
@@ -583,30 +375,23 @@ const Users = () => {
                 <div className="text-xs text-gray-400">ID: {u.employeeCode || u._id.slice(-6).toUpperCase()}</div>
               </div>
             </div>
-            {/* Role */}
             <div className="text-sm text-gray-600 capitalize">{formatRole(u.role)}</div>
-            {/* Contact */}
             <div className="min-w-0">
               <div className="text-sm text-gray-700 truncate">{u.email}</div>
               <div className="text-xs text-gray-400">{u.phone || '—'}</div>
             </div>
-            {/* Territory */}
             <div className="text-sm text-gray-600">
               {u.territory?.name || (typeof u.territory === 'string' && u.territory) || '—'}
             </div>
-            {/* Status */}
             <div>
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${u.isActive ? STATUS_STYLES.active : STATUS_STYLES.inactive}`}>
                 {u.isActive ? '● Active' : '● Inactive'}
               </span>
             </div>
-            {/* Last Activity */}
             <div className="text-sm text-gray-500">{timeAgo(u.updatedAt)}</div>
-            {/* Actions */}
             <div className="flex justify-center">
               <ActionMenu
                 user={u}
-                // onEdit={(usr) => setModalUser(usr)}
                 onEdit={(usr) => navigate(`/users/edit/${usr._id}`)}
                 onDelete={(usr) => setDeleteTarget(usr)}
                 onToggle={(usr) => toggleMut.mutate(usr._id)}
@@ -638,11 +423,6 @@ const Users = () => {
                     }`}>{pg}</button>
                 );
               })}
-              {totalPages > 5 && page < totalPages - 2 && (
-                <><span className="text-gray-400 px-1">...</span>
-                <button onClick={() => setPage(totalPages)}
-                  className="w-8 h-8 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">{totalPages}</button></>
-              )}
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
                 className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 text-gray-500">
                 <ChevronRight size={16} />
@@ -652,15 +432,96 @@ const Users = () => {
         )}
       </div>
 
+      {/* ── MOBILE CARDS (below md) ── */}
+      <div className="md:hidden space-y-3">
+        {isLoading && (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={24} className="text-gray-300 animate-spin" />
+          </div>
+        )}
+
+        {!isLoading && pageUsers.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-white rounded-xl border border-gray-200">
+            <UsersIcon size={36} className="mb-3 opacity-30" />
+            <p className="text-sm font-medium">No users found</p>
+            <p className="text-xs mt-1">Try adjusting your filters or add a new user</p>
+          </div>
+        )}
+
+        {!isLoading && pageUsers.map(u => (
+          <div key={u._id} className="bg-white rounded-xl border border-gray-200 p-4">
+            {/* Top row: avatar + name + action menu */}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-full ${getAvatarColor(u.name)} flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
+                  {getInitials(u.name)}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">{u.name}</div>
+                  <div className="text-xs text-gray-400">ID: {u.employeeCode || u._id.slice(-6).toUpperCase()}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.isActive ? STATUS_STYLES.active : STATUS_STYLES.inactive}`}>
+                  {u.isActive ? 'Active' : 'Inactive'}
+                </span>
+                <ActionMenu
+                  user={u}
+                  onEdit={(usr) => navigate(`/users/edit/${usr._id}`)}
+                  onDelete={(usr) => setDeleteTarget(usr)}
+                  onToggle={(usr) => toggleMut.mutate(usr._id)}
+                  onResetPw={(usr) => setResetTarget(usr)}
+                />
+              </div>
+            </div>
+
+            {/* Info rows */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Shield size={12} className="text-gray-400 flex-shrink-0" />
+                <span className="capitalize">{formatRole(u.role)}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Mail size={12} className="text-gray-400 flex-shrink-0" />
+                <span className="truncate">{u.email}</span>
+              </div>
+              {u.phone && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Phone size={12} className="text-gray-400 flex-shrink-0" />
+                  <span>{u.phone}</span>
+                </div>
+              )}
+              {(u.territory?.name || u.territory) && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <MapPin size={12} className="text-gray-400 flex-shrink-0" />
+                  <span>{u.territory?.name || u.territory}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Mobile Pagination */}
+        {!isLoading && allUsers.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-gray-500">
+              {((page - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(page * ITEMS_PER_PAGE, allUsers.length)} of {allUsers.length}
+            </span>
+            <div className="flex gap-1">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="p-2 rounded-lg border border-gray-200 disabled:opacity-30 text-gray-500 bg-white">
+                <ChevronLeft size={15} />
+              </button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="p-2 rounded-lg border border-gray-200 disabled:opacity-30 text-gray-500 bg-white">
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Modals */}
-      {/* {modalUser !== null && (
-        <UserModal
-          user={modalUser || null}
-          onClose={() => setModalUser(null)}
-          onSave={(form) => saveMut.mutate(form)}
-          loading={saveMut.isPending}
-        />
-      )} */}
       {deleteTarget && (
         <DeleteModal
           user={deleteTarget}
@@ -682,3 +543,4 @@ const Users = () => {
 };
 
 export default Users;
+
